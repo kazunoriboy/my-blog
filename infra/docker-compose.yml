@@ -1,0 +1,42 @@
+version: '3'
+services:
+  db:
+    build: ./mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: do-well
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - blog_db_volume:/var/lib/mysql
+      - "./mysql/sql:/docker-entrypoint-initdb.d"
+      - "./mysql/conf.d/:/etc/mysql/conf.d/"
+      - "./mysql/my.cnf:/etc/mysql/my.cnf"
+  server:
+    build:  ../server
+    volumes:
+      - ../server:/blog
+      - blog_server_volume:/project
+    ports:
+      - "9000:9000"
+    depends_on:
+      - db
+    stdin_open: true
+    tty: true
+  client:
+    build: ../client
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ../client/:/usr/src/app
+    working_dir: /usr/src/app/blog
+    ports:
+      - "3000:3000"
+    tty: true
+  
+
+volumes:
+  blog_db_volume:
+    driver: local
+  blog_server_volume:
+    driver: local
